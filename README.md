@@ -8,4 +8,5 @@ Reads environment variables "KDB_PATH" and "KDB_PASS" to open KeePass file and e
 - "Titles" with spaces and empty values are ignored.
 - Entries named "group_vars" can contain values that are mapped to Ansible "host_vars" in the same branch. So group_names don't have to be unique in the whole tree.
 - tags are mapped to groups (tag_tagname). '=' is replaced by '_'.
+- groups and hostvars are converted to lower case.
 
