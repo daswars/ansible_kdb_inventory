@@ -11,6 +11,7 @@ from string import maketrans
 def kdb_inventory():
   filename = os.environ["KDB_PATH"]
   credentials = { 'password' : os.environ["KDB_PASS"] }
+  vgroups = ['product', 'stage', 'tier', 'type']
   hosts = {}
   inventory = {}
   inventory_vars = {}
@@ -53,6 +54,14 @@ def kdb_inventory():
           except KeyError:
             inventory[group] = {}
             inventory[group]["hosts"] = [hostname]
+        for vgroup in vgroups:
+          if vgroup in hostvars:
+            vgroup = vgroup + "_" +  hostvars[vgroup]
+            try:
+              inventory[vgroup]["hosts"].append(hostname)
+            except KeyError:
+              inventory[vgroup] = {}
+              inventory[vgroup]["hosts"] = [hostname]
         tags = entry.findtext("./Tags").split(';')
         for tag in tags:
           if tag:
