@@ -7,6 +7,7 @@ import os
 import json
 import lxml.etree as ET
 from string import maketrans
+import base64
 
 def kdb_inventory():
   filename = os.environ["KDB_PATH"]
@@ -22,12 +23,14 @@ def kdb_inventory():
     for group in xmldata.findall(".//Group"):
       group_name = group.find("./Name").text.lower()
       group_uuid = group.find("./UUID").text
+      group_uuid = base64.b16encode(base64.b64decode(group_uuid))
       group_name_uuid = group_name + "_" + group_uuid
       inventory[group_name_uuid] = {}
       subgroups = []
       for subgroup in group.findall("./Group"):
         subgroup_name = subgroup.find("./Name").text.lower()
         subgroup_uuid = subgroup.find("./UUID").text
+        subgroup_uuid = base64.b16encode(base64.b64decode(subgroup_uuid))
         subgroup_name_uuid = subgroup_name + "_" + subgroup_uuid
         subgroups.append(subgroup_name_uuid)
       if subgroups:
