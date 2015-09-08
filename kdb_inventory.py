@@ -37,6 +37,7 @@ def kdb_inventory():
         inventory[group_name_uuid]["children"] = subgroups
       for entry in group.findall("./Entry"):
         hostvars = {}
+        hostgroups = []
         hostname = None
         for string in entry.findall("./String"):
           key   = string.findtext("./Key").lower()
@@ -46,49 +47,38 @@ def kdb_inventory():
           if value and key != "title":
             hostvars[key] = value
         if hostname and hostname != "group_vars" and ' ' not in hostname:
-          try:
-            inventory[group_name_uuid]["hosts"].append(hostname)
-          except KeyError:
-            inventory[group_name_uuid]["hosts"] = [hostname]
+          hostgroups.append(group_name_uuid)
           groups = {
-            group.find('Name')
+            group.find('Name').text.lower()
             for group in entry.xpath('ancestor::Group')
           }
           for group in groups:
-            group = group.text.lower()
-            try:
-              inventory[group]["hosts"].append(hostname)
-            except KeyError:
-              inventory[group] = {}
-              inventory[group]["hosts"] = [hostname]
+            hostgroups.append(group)
           for vgroup in vgroups:
             if vgroup in hostvars:
               vgroup = hostvars[vgroup]
-              try:
-                inventory[vgroup]["hosts"].append(hostname)
-              except KeyError:
-                inventory[vgroup] = {}
-                inventory[vgroup]["hosts"] = [hostname]
+              hostgroups.append(vgroup)
           tags = entry.findtext("./Tags").split(';')
           for tag in tags:
             if tag:
               tag = tag.translate(maketrans('=','_'))
+              hostgroups.append(tag)
+          for hostgroup in hostgroups:
+            try:
+              inventory[hostgroup]["hosts"].append(hostname)
+            except KeyError:
               try:
-                inventory[tag]["hosts"].append(hostname)
+                inventory[hostgroup]["hosts"] = [hostname]
               except KeyError:
-                inventory[tag] = {}
-                inventory[tag]["hosts"] = [hostname]
+                inventory[hostgroup] = {}
+                inventory[hostgroup]["hosts"] = [hostname]
         if hostname and hostname != "group_vars":
           hosts[hostname] = hostvars
         if hostname == "group_vars":
-          try:
-            inventory[group_name_uuid]["vars"] = hostvars
-          except KeyError:
-            inventory[group_name_uuid] = {}
-            inventory[group_name_uuid]["vars"] = hostvars
-        inventory_vars["hostvars"] = hosts
-        inventory["_meta"] = inventory_vars
+          inventory[group_name_uuid]["vars"] = hostvars
 
+    inventory_vars["hostvars"] = hosts
+    inventory["_meta"] = inventory_vars
     print json.dumps(inventory, indent=2, sort_keys=True)
 
 if __name__ == '__main__':
